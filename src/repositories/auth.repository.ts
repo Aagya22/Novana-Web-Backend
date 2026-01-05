@@ -1,65 +1,38 @@
-import { IUser, UserModel } from "../models/user.model";
+import { UserModel, IUser } from "../models/user.model";
+import { CreateUserDTO } from "../dtos/user.dto";
 
-export interface IUserRepository{
-
-    //create a user 
-    createUser(data: Partial<IUser>): Promise<IUser>;
-
-    //get user by their email
-    getUserByEmail(email: string): Promise<IUser | null>;
-
-    //get user by their username
-    getUserByUsername(username: string): Promise<IUser | null>;
-
-    //get user by their id
-    getUserById(id: string): Promise<IUser | null>;
-
-    //get all users at once
-    getAllUsers(): Promise<IUser[]>;
-
-    //update a user
-    updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
-
-    //delete a user
-    deleteUser(id: string): Promise<boolean |null>;
-}
-
-export class UserRepository implements IUserRepository{
-
-
-    async createUser(data: Partial<IUser>): Promise<IUser> {
-        const newUser = new UserModel(data);
-        await newUser.save();
-        return newUser;
-    }
-    async getUserByEmail(email: string): Promise<IUser | null> {
-        const user = await UserModel.findOne({"email": email});
+export class UserRepository {
+    async createUser(data: CreateUserDTO): Promise<IUser> {
+        const user = await UserModel.create({
+            email: data.email,
+            password: data.password,
+            fullName: data.fullName,
+            username: data.username,
+            phoneNumber: data.phoneNumber,
+        });
         return user;
+    }
+
+    async getUserByEmail(email: string): Promise<IUser | null> {
+        return UserModel.findOne({ email }).exec();
     }
 
     async getUserByUsername(username: string): Promise<IUser | null> {
-        const user = await UserModel.findOne({"username" : username});
-        return user;
+        return UserModel.findOne({ username }).exec();
     }
 
     async getUserById(id: string): Promise<IUser | null> {
-        const user = await UserModel.findById(id);
-        return user;
+        return UserModel.findById(id).exec();
     }
 
-    async getAllUsers(): Promise<IUser[]> {
-        const users = await UserModel.find();
-        return users;
+    async updateUserById(
+        id: string, 
+        updates: Partial<Pick<IUser, "email" | "password" | "fullName" | "username" | "phoneNumber" | "role">>
+    ): Promise<IUser | null> {
+        return UserModel.findByIdAndUpdate(id, updates, { new: true }).exec();
     }
 
-    async updateUser(id: string, data: Partial<IUser>): Promise<IUser | null> {
-        const updatedUser = await UserModel.findByIdAndUpdate(id, data, { new : true});
-        return updatedUser;
+    async deleteUserById(id: string): Promise<IUser | null> {
+        return UserModel.findByIdAndDelete(id).exec();
     }
-
-    async deleteUser(id: string): Promise<boolean | null> {
-        const result = await UserModel.findByIdAndDelete(id);
-        return result ? true : false;
-    }
-
 }

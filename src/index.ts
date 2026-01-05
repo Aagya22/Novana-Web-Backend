@@ -1,21 +1,31 @@
-import express, { Application, Request, Response } from 'express';
-import { connectDB } from './database/mongodb';
-import dotenv from 'dotenv';
 
-dotenv.config();
+import express, { Application, Request, Response } from 'express';
+import bodyParser from 'body-parser';
+// import cors from 'cors';
+import { PORT } from './config';
+import authRoutes from './routes/auth.route';
+import { connectDB as connectdb } from './database/mongodb';
 
 const app: Application = express();
-const PORT: number = Number(process.env.PORT) || 3000;  
 
+
+// app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Health check route
 app.get('/', (req: Request, res: Response) => {
-    res.send("Hello World!");
+    res.status(200).json({ message: 'Novana API is running!' });
 });
 
+// Auth routes
+app.use('/api/auth', authRoutes);
+
 async function startServer() {
-    await connectDB();  
+    await connectdb();
     app.listen(PORT, () => {
-        console.log(`Server on http://localhost:${PORT}`);
+        console.log(`Server is running: http://localhost:${PORT}`);
     });
 }
 
-startServer(); 
+startServer();
