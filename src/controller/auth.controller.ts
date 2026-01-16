@@ -10,9 +10,10 @@ export class AuthController {
         try {
             const parsedData = CreateUserDTO.safeParse(req.body);
             if (!parsedData.success) {
+                const messages = parsedData.error.issues.map((i) => i.message).join(", ");
                 return res.status(400).json({
                     success: false,
-                    message: z.prettifyError(parsedData.error)
+                    message: messages
                 });
             }
 
@@ -43,9 +44,10 @@ export class AuthController {
         try {
             const parsedData = LoginUserDTO.safeParse(req.body);
             if (!parsedData.success) {
+                const messages = parsedData.error.issues.map((i) => i.message).join(", ");
                 return res.status(400).json({
                     success: false,
-                    message: z.prettifyError(parsedData.error)
+                    message: messages
                 });
             }
 

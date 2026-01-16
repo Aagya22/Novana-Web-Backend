@@ -8,7 +8,7 @@ const UserSchema: Schema = new Schema(
         phoneNumber: { type: String, required: true, unique: true },
         username: { type: String, required: true, unique: true },
         password: { type: String, required: true },
-        role: { type: String, enum: ['user', 'admin', 'seller'], default: 'user' }
+        role: { type: String, enum: ['user', 'admin', ], default: 'user' }
     },
     {
         timestamps: true
