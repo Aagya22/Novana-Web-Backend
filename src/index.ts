@@ -6,6 +6,7 @@ import { PORT } from './config';
 import authRoutes from './routes/auth.route';
 import { connectDB as connectdb } from './database/mongodb';
 import cors from 'cors';
+import path from 'path';
 
 const app: Application = express();
 let corsOptions={
@@ -16,6 +17,7 @@ let corsOptions={
 }
 
 app.use(cors(corsOptions));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'))); // Serve static files from uploads directory
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
