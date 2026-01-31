@@ -10,7 +10,14 @@ import path from 'path';
 
 const app: Application = express();
 let corsOptions={
-    origin:["http://localhost:3000","http://localhost:3003","http://localhost:5050","http://10.0.2.2:5050"],
+    origin: [
+  "http://localhost:3000",
+  "http://localhost:3003",
+  "http://localhost:5050",
+  "http://192.168.1.5:5050",
+  "http://10.0.2.2:5050"
+],
+
     credentials: true,
     optionsSuccessStatus: 200
     //list of domains allowed to access the server
