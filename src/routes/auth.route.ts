@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "../controller/auth.controller";
 import { authorizedMiddleware } from "../middleware/authorized.middleware";
-import { upload, uploads } from "../middleware/upload.middleware";
+import {  uploads } from "../middleware/upload.middleware";
 
 const router = Router();
 const authController = new AuthController();

@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.route';
 import { connectDB as connectdb } from './database/mongodb';
 import cors from 'cors';
 import path from 'path';
+import adminUserRoutes from './routes/admin/user.route';
+
 
 const app: Application = express();
 let corsOptions={
@@ -35,6 +37,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/users', adminUserRoutes);
 
 async function startServer() {
     await connectdb();
