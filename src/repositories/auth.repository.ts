@@ -10,7 +10,12 @@ export class UserRepository {
       fullName: data.fullName,
       username: data.username,
       phoneNumber: data.phoneNumber,
+      imageUrl: data.imageUrl,
     });
+  }
+
+  async getAllUsers(): Promise<IUser[]> {
+    return UserModel.find().exec();
   }
 
   async getUserByEmail(email: string): Promise<IUser | null> {
@@ -25,19 +30,39 @@ export class UserRepository {
     return UserModel.findById(id).exec();
   }
 
+ 
+  async updateUser(
+    id: string,
+    updates: Partial<Pick<IUser,
+      | "email"
+      | "password"
+      | "fullName"
+      | "username"
+      | "phoneNumber"
+      | "role"
+      | "imageUrl"
+    >>
+  ): Promise<IUser | null> {
+    return this.updateUserById(id, updates);
+  }
+
   async updateUserById(
     id: string,
     updates: Partial<Pick<IUser,
-      "email" |
-      "password" |
-      "fullName" |
-      "username" |
-      "phoneNumber" |
-      "role" |
-      "imageUrl"
+      | "email"
+      | "password"
+      | "fullName"
+      | "username"
+      | "phoneNumber"
+      | "role"
+      | "imageUrl"
     >>
   ): Promise<IUser | null> {
     return UserModel.findByIdAndUpdate(id, updates, { new: true }).exec();
+  }
+
+  async deleteUser(id: string): Promise<IUser | null> {
+    return this.deleteUserById(id);
   }
 
   async deleteUserById(id: string): Promise<IUser | null> {
@@ -46,7 +71,7 @@ export class UserRepository {
 
   async updateAdminRole(
     id: string,
-    role: "user" | "admin" | "provider"
+    role: "user" | "admin"
   ): Promise<IUser | null> {
     return UserModel.findByIdAndUpdate(id, { role }, { new: true }).exec();
   }

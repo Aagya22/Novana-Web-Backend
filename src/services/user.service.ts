@@ -1,4 +1,4 @@
-import { CreateUserDTO, LoginUserDTO, UpdateUserDto } from "../dtos/user.dto";
+import { CreateUserDTO, LoginUserDto,  UpdateUserDto } from "../dtos/user.dto";
 import bcryptjs from "bcryptjs";
 import { HttpError } from "../errors/http-error";
 import jwt from "jsonwebtoken";
@@ -26,7 +26,7 @@ export class UserService {
   }
 
   /* -------------------- LOGIN -------------------- */
-  async loginUser(data: LoginUserDTO) {
+  async loginUser(data: LoginUserDto) {
     const user = await userRepository.getUserByEmail(data.email);
     if (!user) {
       throw new HttpError(404, "User not found");
