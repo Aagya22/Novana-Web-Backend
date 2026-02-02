@@ -9,6 +9,7 @@ const router = Router();
 
 router.use(authorizedMiddleware); // apply all with middleware
 router.use(adminMiddleware); // apply all with middleware
+router.get("/api/admin/users", adminUserController.getAllUsers);
 
 router.post("/", uploads.single("image"), adminUserController.createUser);
 router.get("/", adminUserController.getAllUsers);

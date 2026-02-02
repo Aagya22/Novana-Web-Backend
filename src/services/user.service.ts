@@ -25,30 +25,34 @@ export class UserService {
     return userRepository.createUser(data);
   }
 
-  /* -------------------- LOGIN -------------------- */
-  async loginUser(data: LoginUserDto) {
-    const user = await userRepository.getUserByEmail(data.email);
-    if (!user) {
-      throw new HttpError(404, "User not found");
-    }
+async loginUser(data: LoginUserDto) {
+  const user = await userRepository.getUserByEmail(data.email);
 
-    const validPassword = await bcryptjs.compare(data.password, user.password);
-    if (!validPassword) {
-      throw new HttpError(401, "Invalid credentials");
-    }
-
-    const payload = {
-      id: user._id,
-      email: user.email,
-      fullName: user.fullName,
-      username: user.username,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-    };
-
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
-    return { token, user };
+  if (!user) {
+    throw new HttpError(404, "User not found");
   }
+
+  const validPassword = await bcryptjs.compare(
+    data.password,
+    user.password
+  );
+
+  if (!validPassword) {
+    throw new HttpError(401, "Invalid credentials");
+  }
+
+  // ✅ Removed all loginAs checks - role comes from database only
+  const payload = {
+    id: user._id,
+    role: user.role, // Role from database
+  };
+
+  const token = jwt.sign(payload, JWT_SECRET, {
+    expiresIn: "30d",
+  });
+
+  return { token, user };
+}
 
 
   async getUserById(userId: string) {

@@ -38,91 +38,111 @@ export class AuthController {
         }
     }
 
-    async login(req: Request, res: Response) {
-        try {
-            const parsedData = LoginUserDTO.safeParse(req.body);
-            if (!parsedData.success) {
-                const messages = parsedData.error.issues.map(i => i.message).join(", ");
-                return res.status(400).json({ success: false, message: messages });
-            }
+async login(req: Request, res: Response) {
+  try {
+    const parsedData = LoginUserDTO.safeParse(req.body);
 
-            const loginData = parsedData.data;
-            const { token, user } = await userService.loginUser(loginData);
-
-            return res.status(200).json({
-                success: true,
-                message: "Login successful",
-                data: {
-                    id: user._id,
-                    email: user.email,
-                    fullName: user.fullName,
-                    username: user.username,
-                    phoneNumber: user.phoneNumber,
-                    role: user.role,
-                    imageUrl: user.imageUrl ?? null
-                },
-                token
-            });
-        } catch (error: any) {
-            return res.status(error.statusCode ?? 500).json({
-                success: false,
-                message: error.message || "Internal Server Error"
-            });
-        }
+    if (!parsedData.success) {
+      return res.status(400).json({
+        success: false,
+        message: parsedData.error.issues
+          .map(i => i.message)
+          .join(", "),
+      });
     }
 
+    const { token, user } = await userService.loginUser(parsedData.data);
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: {
+        id: user._id,
+        email: user.email,
+        fullName: user.fullName,
+        username: user.username,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        imageUrl: user.imageUrl ?? null,
+      },
+      token,
+    });
+  } catch (error: any) {
+    return res.status(error.statusCode ?? 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+
+    
     async getUserProfile(req: Request, res: Response) {
-        try {
-            const userId = req.user?._id;
-            if (!userId) {
-                return res.status(401).json({ success: false, message: "Unauthorized" });
-            }
+  try {
+    const userId = req.user?._id?.toString();
 
-            const user = await userService.getUserById(userId);
-            return res.status(200).json({
-                success: true,
-                message: "User profile fetched successfully",
-                data: user
-            });
-        } catch (error: any) {
-            return res.status(error.statusCode ?? 500).json({
-                success: false,
-                message: error.message || "Internal Server Error"
-            });
-        }
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
 
-    async updateUser(req: Request, res: Response) {
-        try {
-            const userId = req.user?._id;
-            if (!userId) {
-                return res.status(401).json({ success: false, message: "Unauthorized" });
-            }
+    const user = await userService.getUserById(userId);
 
-            const parsedData = UpdateUserDto.safeParse(req.body);
-            if (!parsedData.success) {
-                return res.status(400).json({
-                    success: false,
-                    message: z.prettifyError(parsedData.error)
-                });
-            }
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully",
+      data: user,
+    });
+  } catch (error: any) {
+    return res.status(error.statusCode ?? 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+}
 
-            if (req.file) {
-                parsedData.data.imageUrl = `/uploads/${req.file.filename}`;
-            }
+ async updateUser(req: Request, res: Response) {
+  try {
+    const userId = req.user?._id?.toString();
 
-            const updatedUser = await userService.updateUser(userId, parsedData.data);
-
-            return res.status(200).json({
-                success: true,
-                message: "User updated successfully",
-                data: updatedUser
-            });
-        } catch (error: any) {
-            return res.status(error.statusCode ?? 500).json({
-                success: false,
-                message: error.message || "Internal Server Error"
-            });
-        }
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
+
+    const parsedData = UpdateUserDto.safeParse(req.body);
+    if (!parsedData.success) {
+      return res.status(400).json({
+        success: false,
+        message: parsedData.error.issues
+          .map(i => i.message)
+          .join(", "),
+      });
+    }
+
+    if (req.file) {
+      parsedData.data.imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    const updatedUser = await userService.updateUser(
+      userId,               // ✅ string now
+      parsedData.data
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser,
+    });
+  } catch (error: any) {
+    return res.status(error.statusCode ?? 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+}
 }

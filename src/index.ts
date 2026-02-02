@@ -38,6 +38,8 @@ app.get('/', (req: Request, res: Response) => {
 // Auth routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+// Removed duplicate mount of adminUserRoutes
+// app.use('/api/admin', adminUserRoutes);
 
 async function startServer() {
     await connectdb();
