@@ -8,6 +8,7 @@ const authController = new AuthController();
 
 router.post("/register", (req, res) => authController.register(req, res));
 router.post("/login", (req, res) => authController.login(req, res));
+
 router.get('/whoami', authorizedMiddleware,  authController.getUserProfile);
 
 router.put(
@@ -16,5 +17,6 @@ router.put(
     uploads.single('image'), // expecting a single file with field name 'image' key in form-data
     authController.updateUser
 )
-
+router.post("/request-password-reset", authController.sendResetPasswordEmail);
+router.post("/reset-password/:token", authController.resetPassword);
 export default router;
