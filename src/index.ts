@@ -8,6 +8,11 @@ import { connectDB as connectdb } from './database/mongodb';
 import cors from 'cors';
 import path from 'path';
 import adminUserRoutes from './routes/admin/user.route';
+import journalRoutes from './routes/journal.route';
+import exerciseRoutes from './routes/exercise.route';
+import moodRoutes from './routes/mood.route';
+import habitRoutes from './routes/habit.route';
+import reminderRoutes from './routes/reminder.route';
 
 
 const app: Application = express();
@@ -40,6 +45,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 // Removed duplicate mount of adminUserRoutes
 // app.use('/api/admin', adminUserRoutes);
+
+// Feature routes
+app.use('/api/journals', journalRoutes);
+app.use('/api/exercises', exerciseRoutes);
+app.use('/api/moods', moodRoutes);
+app.use('/api/habits', habitRoutes);
+app.use('/api/reminders', reminderRoutes);
 
 async function startServer() {
     await connectdb();
