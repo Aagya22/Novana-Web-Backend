@@ -18,6 +18,42 @@ export class UserRepository {
     return UserModel.find().exec();
   }
 
+  async getAllUsersWithPagination(
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ): Promise<{ users: IUser[]; total: number; page: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    
+    let query: any = {};
+    if (search) {
+      query = {
+        $or: [
+          { fullName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { username: { $regex: search, $options: 'i' } },
+          { phoneNumber: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    const users = await UserModel.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    const total = await UserModel.countDocuments(query).exec();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      users,
+      total,
+      page,
+      totalPages
+    };
+  }
+
   async getUserByEmail(email: string): Promise<IUser | null> {
     return UserModel.findOne({ email }).exec();
   }

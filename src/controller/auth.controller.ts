@@ -15,6 +15,8 @@ export class AuthController {
             }
 
             const userData = parsedData.data;
+        // Public registration must never be able to self-assign admin.
+        (userData as any).role = "user";
             const newUser = await userService.createUser(userData);
 
             return res.status(201).json({
