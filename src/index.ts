@@ -1,5 +1,5 @@
 import { PORT } from "./config";
-import { connectDB as connectdb } from "./database/mongodb";
+import { connectDatabase as connectdb } from "./database/mongodb";
 import { app } from "./app";
 
 async function startServer() {
