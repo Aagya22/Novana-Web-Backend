@@ -20,6 +20,9 @@ export class AdminUserController {
         parsedData.data.imageUrl = `/uploads/${req.file.filename}`;
       }
 
+      // Admin-created users must never be created as admin.
+      (parsedData.data as any).role = "user";
+
       const newUser = await adminUserService.createUser(parsedData.data);
 
       return res.status(201).json({
@@ -37,12 +40,22 @@ export class AdminUserController {
 
   async getAllUsers(req: Request, res: Response) {
     try {
-      const users = await adminUserService.getAllUsers();
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+
+      const result = await adminUserService.getAllUsersWithPagination(page, limit, search);
 
       return res.status(200).json({
         success: true,
         message: "All Users Retrieved",
-        data: users,
+        data: result.users,
+        pagination: {
+          page: result.page,
+          limit: limit,
+          total: result.total,
+          totalPages: result.totalPages
+        }
       });
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({
@@ -83,6 +96,9 @@ export class AdminUserController {
       if (req.file) {
         parsedData.data.imageUrl = `/uploads/${req.file.filename}`;
       }
+
+      // Admin must never change a user's role via this endpoint.
+      delete (parsedData.data as any).role;
 
       const updatedUser = await adminUserService.updateUser(
         req.params.id,

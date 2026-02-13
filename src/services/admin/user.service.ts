@@ -29,6 +29,11 @@ export class AdminUserService {
         return users
     }
 
+    async getAllUsersWithPagination(page: number = 1, limit: number = 10, search?: string){
+        const result = await userRepository.getAllUsersWithPagination(page, limit, search);
+        return result;
+    }
+
     async deleteUser(id: string){
         const user = await userRepository.getUserById(id);
         if(!user){
