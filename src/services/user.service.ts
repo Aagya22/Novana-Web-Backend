@@ -116,9 +116,10 @@ async loginUser(data: LoginUserDto) {
             throw new HttpError(400, "Email is required");
         }
         const user = await userRepository.getUserByEmail(email);
-        if (!user) {
-            throw new HttpError(404, "User not found");
-        }
+      // Do not reveal whether an email exists.
+      if (!user) {
+        return null;
+      }
         const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' }); // 1 hour expiry
         const resetLink = `${CLIENT_URL}/reset-password?token=${token}`;
         const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`;
