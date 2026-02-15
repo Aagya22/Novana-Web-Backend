@@ -67,6 +67,57 @@ describe("Journal API (integration)", () => {
     expect(res.body.data.length).toBe(1);
   });
 
+  it("3b) supports searching journals by title (q)", async () => {
+    const token = await createUserAndToken();
+
+    await request(app)
+      .post("/api/journals")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Morning Notes", content: "C1", date: "2026-02-10" });
+
+    await request(app)
+      .post("/api/journals")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Evening Reflection", content: "C2", date: "2026-02-11" });
+
+    const res = await request(app)
+      .get("/api/journals?q=morning")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].title).toBe("Morning Notes");
+  });
+
+  it("3c) supports filtering journals by date range (startDate/endDate)", async () => {
+    const token = await createUserAndToken();
+
+    await request(app)
+      .post("/api/journals")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "A", content: "C", date: "2026-02-01" });
+
+    await request(app)
+      .post("/api/journals")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "B", content: "C", date: "2026-02-15" });
+
+    await request(app)
+      .post("/api/journals")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "C", content: "C", date: "2026-02-28" });
+
+    const res = await request(app)
+      .get("/api/journals?startDate=2026-02-10&endDate=2026-02-20")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].title).toBe("B");
+  });
+
   it("4) updates a journal", async () => {
     const token = await createUserAndToken();
 
@@ -85,6 +136,26 @@ describe("Journal API (integration)", () => {
     expect(updated.status).toBe(200);
     expect(updated.body.success).toBe(true);
     expect(updated.body.data.title).toBe("New");
+  });
+
+  it("4b) prevents updating another user's journal", async () => {
+    const tokenA = await createUserAndToken();
+    const tokenB = await createUserAndToken();
+
+    const created = await request(app)
+      .post("/api/journals")
+      .set("Authorization", `Bearer ${tokenA}`)
+      .send({ title: "Private", content: "Secret" });
+
+    const id = created.body.data._id;
+
+    const updated = await request(app)
+      .put(`/api/journals/${id}`)
+      .set("Authorization", `Bearer ${tokenB}`)
+      .send({ title: "Hacked" });
+
+    expect(updated.status).toBe(404);
+    expect(updated.body.success).toBe(false);
   });
 
   it("5) deletes a journal", async () => {
