@@ -19,3 +19,14 @@ export const UpdateExerciseDTO = z.object({
 });
 
 export type UpdateExerciseDTO = z.infer<typeof UpdateExerciseDTO>;
+
+/* -------------------- COMPLETE GUIDED EXERCISE -------------------- */
+export const CompleteGuidedExerciseDTO = z.object({
+    title: z.string().min(1),
+    category: z.string().min(1),
+    plannedDurationSeconds: z.number().int().min(1),
+    elapsedSeconds: z.number().int().min(1),
+    completedAt: z.string().optional(),
+});
+
+export type CompleteGuidedExerciseDTO = z.infer<typeof CompleteGuidedExerciseDTO>;

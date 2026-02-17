@@ -5,6 +5,9 @@ import { authorizedMiddleware } from "../middleware/authorized.middleware";
 const router = Router();
 const exerciseController = new ExerciseController();
 
+router.post("/guided/complete", authorizedMiddleware, (req, res) => exerciseController.completeGuidedExercise(req, res));
+router.get("/guided/history", authorizedMiddleware, (req, res) => exerciseController.getGuidedHistory(req, res));
+
 router.post("/", authorizedMiddleware, (req, res) => exerciseController.createExercise(req, res));
 router.get("/", authorizedMiddleware, (req, res) => exerciseController.getExercises(req, res));
 router.get("/:id", authorizedMiddleware, (req, res) => exerciseController.getExercise(req, res));
