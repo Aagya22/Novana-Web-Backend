@@ -1,4 +1,4 @@
-import { CreateExerciseDTO, UpdateExerciseDTO } from "../dtos/exercise.dto";
+import { CompleteGuidedExerciseDTO, CreateExerciseDTO, UpdateExerciseDTO } from "../dtos/exercise.dto";
 import { HttpError } from "../errors/http-error";
 import { ExerciseRepository } from "../repositories/exercise.repository";
 
@@ -8,6 +8,14 @@ export class ExerciseService {
 
     async createExercise(userId: string, data: CreateExerciseDTO) {
         return exerciseRepository.createExercise(userId, data);
+    }
+
+    async completeGuidedExercise(userId: string, data: CompleteGuidedExerciseDTO) {
+        return exerciseRepository.completeGuidedExercise(userId, data);
+    }
+
+    async getGuidedHistory(userId: string, from?: Date, to?: Date) {
+        return exerciseRepository.getGuidedHistoryByUser(userId, from, to);
     }
 
     async getExercisesByUser(userId: string) {
