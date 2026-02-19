@@ -7,6 +7,12 @@ const reminderController = new ReminderController();
 
 router.post("/", authorizedMiddleware, (req, res) => reminderController.createReminder(req, res));
 router.get("/", authorizedMiddleware, (req, res) => reminderController.getReminders(req, res));
+
+// Notification history + due reminders
+router.get("/notifications", authorizedMiddleware, (req, res) => reminderController.getNotificationHistory(req, res));
+router.patch("/notifications/:id/read", authorizedMiddleware, (req, res) => reminderController.markNotificationRead(req, res));
+router.get("/due", authorizedMiddleware, (req, res) => reminderController.getDueReminders(req, res));
+
 router.get("/:id", authorizedMiddleware, (req, res) => reminderController.getReminder(req, res));
 router.put("/:id", authorizedMiddleware, (req, res) => reminderController.updateReminder(req, res));
 router.delete("/:id", authorizedMiddleware, (req, res) => reminderController.deleteReminder(req, res));
