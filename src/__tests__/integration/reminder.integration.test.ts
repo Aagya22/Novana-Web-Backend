@@ -67,7 +67,7 @@ describe("Reminder API (integration)", () => {
     expect(res.body.data.length).toBe(1);
   });
 
-  it("4) toggles reminder done", async () => {
+  it("4) toggles reminder enabled", async () => {
     const token = await createUserAndToken();
 
     const created = await request(app)
@@ -76,7 +76,7 @@ describe("Reminder API (integration)", () => {
       .send({ title: "Toggle", time: "9:00 AM" });
 
     const id = created.body.data._id;
-    const initialDone = created.body.data.done ?? false;
+    const initialEnabled = created.body.data.enabled ?? true;
 
     const toggled = await request(app)
       .patch(`/api/reminders/${id}/toggle`)
@@ -84,7 +84,7 @@ describe("Reminder API (integration)", () => {
 
     expect(toggled.status).toBe(200);
     expect(toggled.body.success).toBe(true);
-    expect(toggled.body.data.done).toBe(!initialDone);
+    expect(toggled.body.data.enabled).toBe(!initialEnabled);
   });
 
   it("5) deletes a reminder", async () => {

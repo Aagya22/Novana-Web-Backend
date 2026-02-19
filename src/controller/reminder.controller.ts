@@ -6,6 +6,76 @@ const reminderService = new ReminderService();
 
 export class ReminderController {
 
+    async getNotificationHistory(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
+            const limitRaw = req.query.limit;
+            const limit = typeof limitRaw === "string" ? Math.min(100, Math.max(1, parseInt(limitRaw, 10) || 20)) : 20;
+
+            const notifications = await reminderService.getNotificationHistory(userId, limit);
+            return res.status(200).json({
+                success: true,
+                message: "Notifications fetched successfully",
+                data: notifications,
+            });
+        } catch (error: any) {
+            return res.status(error.statusCode ?? 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
+        }
+    }
+
+    async markNotificationRead(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
+            const { id } = req.params;
+            const updated = await reminderService.markNotificationRead(userId, id);
+            return res.status(200).json({
+                success: true,
+                message: "Notification marked as read",
+                data: updated,
+            });
+        } catch (error: any) {
+            return res.status(error.statusCode ?? 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
+        }
+    }
+
+    async getDueReminders(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
+            const wmRaw = req.query.windowMinutes;
+            const windowMinutes = typeof wmRaw === "string" ? Math.min(10, Math.max(0, parseInt(wmRaw, 10) || 2)) : 2;
+
+            const delivered = await reminderService.deliverDueReminders(userId, windowMinutes);
+            return res.status(200).json({
+                success: true,
+                message: "Due reminders checked",
+                data: delivered,
+            });
+        } catch (error: any) {
+            return res.status(error.statusCode ?? 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
+        }
+    }
+
     async createReminder(req: Request, res: Response) {
         try {
             const userId = req.user?._id?.toString();
