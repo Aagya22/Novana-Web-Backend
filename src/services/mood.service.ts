@@ -100,7 +100,7 @@ export class MoodService {
             return { mood: updated, replaced: true };
         }
 
-        // Concurrency-safe creation: unique (userId, dayKey) prevents duplicates.
+      
         try {
             const created = await moodRepository.createMood(userId, {
                 ...data,
@@ -146,6 +146,39 @@ export class MoodService {
         const requested = this.parseDateInput(date);
         const { start, end } = this.getLocalDayRange(requested);
         return moodRepository.getMoodForUserByDateRange(userId, start, end);
+    }
+
+    async getMoodsInRange(userId: string, from: string, to: string) {
+        const fromDate = this.parseDateInput(from);
+        const toDate = this.parseDateInput(to);
+
+        const start = new Date(fromDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(toDate);
+        end.setHours(0, 0, 0, 0);
+        end.setDate(end.getDate() + 1);
+
+        const entries = await moodRepository.getMoodsForUserByDateRange(userId, start, end);
+
+      
+        const seen = new Set<string>();
+        const deduped: any[] = [];
+        for (const e of entries.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())) {
+            const key = (e as any).dayKey || this.toLocalDateKey(new Date(e.date));
+            if (seen.has(key)) continue;
+            seen.add(key);
+            deduped.push({
+                _id: e._id,
+                mood: (e as any).mood,
+                moodType: (e as any).moodType,
+                note: (e as any).note,
+                dayKey: key,
+                date: (e as any).date,
+            });
+        }
+
+      
+        return deduped.sort((a, b) => (a.dayKey as string).localeCompare(b.dayKey as string));
     }
 
     async getMoodOverview(userId: string) {
@@ -238,8 +271,8 @@ export class MoodService {
     async getMoodsByUser(userId: string) {
         const moods = await moodRepository.getMoodsByUser(userId);
 
-        // Enforce one-per-day at read time too (in case of legacy duplicates).
-        // `getMoodsByUser` is sorted by date desc, so first seen per day is the most recent.
+       
+
         const seen = new Set<string>();
         const deduped: any[] = [];
         for (const m of moods) {

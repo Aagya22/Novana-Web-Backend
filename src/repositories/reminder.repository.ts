@@ -3,12 +3,12 @@ import { CreateReminderDTO, UpdateReminderDTO } from "../dtos/reminder.dto";
 
 function normalizeTimeToHHmm(input: string): string {
     const trimmed = (input || "").trim();
-    // Already HH:mm
+   
     if (/^\d{2}:\d{2}$/.test(trimmed)) return trimmed;
 
-    // Attempt parse formats like "7:00 AM", "7:00PM", "12:05 pm"
+    
     const m = trimmed.match(/^\s*(\d{1,2})\s*:\s*(\d{2})\s*([AaPp][Mm])\s*$/);
-    if (!m) return trimmed; // fallback; validation happens at DTO layer
+    if (!m) return trimmed; 
 
     let hour = parseInt(m[1], 10);
     const minute = parseInt(m[2], 10);
@@ -43,7 +43,7 @@ export class ReminderRepository {
     }
 
     async getRemindersByUser(userId: string): Promise<IReminder[]> {
-        // Active reminders are typically rendered by time; keep it stable.
+        
         return ReminderModel.find({ userId }).sort({ time: 1 }).exec();
     }
 
