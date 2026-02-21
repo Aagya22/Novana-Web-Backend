@@ -13,6 +13,9 @@ export class ReminderController {
                 return res.status(401).json({ success: false, message: "Unauthorized" });
             }
 
+            // Backfill missed notifications (e.g., app was closed at scheduled time).
+            await reminderService.backfillMissedNotifications(userId, 24);
+
             const limitRaw = req.query.limit;
             const limit = typeof limitRaw === "string" ? Math.min(100, Math.max(1, parseInt(limitRaw, 10) || 20)) : 20;
 
@@ -52,12 +55,57 @@ export class ReminderController {
         }
     }
 
+    async deleteNotification(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
+            const { id } = req.params;
+            await reminderService.deleteNotification(userId, id);
+            return res.status(200).json({
+                success: true,
+                message: "Notification deleted",
+            });
+        } catch (error: any) {
+            return res.status(error.statusCode ?? 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
+        }
+    }
+
+    async clearNotificationHistory(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
+            const deletedCount = await reminderService.clearNotificationHistory(userId);
+            return res.status(200).json({
+                success: true,
+                message: "Notification history cleared",
+                data: { deletedCount },
+            });
+        } catch (error: any) {
+            return res.status(error.statusCode ?? 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
+        }
+    }
+
     async getDueReminders(req: Request, res: Response) {
         try {
             const userId = req.user?._id?.toString();
             if (!userId) {
                 return res.status(401).json({ success: false, message: "Unauthorized" });
             }
+
+            // Backfill missed notifications as well.
+            await reminderService.backfillMissedNotifications(userId, 24);
 
             const wmRaw = req.query.windowMinutes;
             const windowMinutes = typeof wmRaw === "string" ? Math.min(10, Math.max(0, parseInt(wmRaw, 10) || 2)) : 2;
