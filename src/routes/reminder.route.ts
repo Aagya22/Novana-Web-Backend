@@ -10,7 +10,9 @@ router.get("/", authorizedMiddleware, (req, res) => reminderController.getRemind
 
 // Notification history + due reminders
 router.get("/notifications", authorizedMiddleware, (req, res) => reminderController.getNotificationHistory(req, res));
+router.delete("/notifications", authorizedMiddleware, (req, res) => reminderController.clearNotificationHistory(req, res));
 router.patch("/notifications/:id/read", authorizedMiddleware, (req, res) => reminderController.markNotificationRead(req, res));
+router.delete("/notifications/:id", authorizedMiddleware, (req, res) => reminderController.deleteNotification(req, res));
 router.get("/due", authorizedMiddleware, (req, res) => reminderController.getDueReminders(req, res));
 
 router.get("/:id", authorizedMiddleware, (req, res) => reminderController.getReminder(req, res));

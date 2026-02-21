@@ -9,6 +9,16 @@ export class ReminderNotificationRepository {
       .exec();
   }
 
+  async deleteById(userId: string, id: string): Promise<boolean> {
+    const res = await ReminderNotificationModel.deleteOne({ _id: id, userId }).exec();
+    return (res.deletedCount ?? 0) > 0;
+  }
+
+  async deleteAllByUser(userId: string): Promise<number> {
+    const res = await ReminderNotificationModel.deleteMany({ userId }).exec();
+    return res.deletedCount ?? 0;
+  }
+
   async createIfNotExists(params: {
     userId: string;
     reminderId: string;

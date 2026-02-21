@@ -8,8 +8,8 @@ import adminUserRoutes from "./routes/admin/user.route";
 import journalRoutes from "./routes/journal.route";
 import exerciseRoutes from "./routes/exercise.route";
 import moodRoutes from "./routes/mood.route";
-import habitRoutes from "./routes/habit.route";
 import reminderRoutes from "./routes/reminder.route";
+import scheduleRoutes from "./routes/schedule.route";
 
 export const app: Application = express();
 
@@ -40,5 +40,5 @@ app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/journals", journalRoutes);
 app.use("/api/exercises", exerciseRoutes);
 app.use("/api/moods", moodRoutes);
-app.use("/api/habits", habitRoutes);
 app.use("/api/reminders", reminderRoutes);
+app.use("/api/schedules", scheduleRoutes);
