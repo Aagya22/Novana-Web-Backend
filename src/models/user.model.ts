@@ -9,7 +9,8 @@ const UserSchema: Schema = new Schema(
         username: { type: String, required: true, unique: true },
         password: { type: String, required: true },
         role: { type: String, enum: ['user', 'admin', ], default: 'user' },
-        imageUrl: {type: String, required: false} // for image URL storage
+        imageUrl: {type: String, required: false}, // for image URL storage
+        notificationHistoryClearedAt: { type: Date, default: null }
     },
     {
         timestamps: true
@@ -18,6 +19,7 @@ const UserSchema: Schema = new Schema(
 
 export interface IUser extends UserType, Document {
     _id: mongoose.Types.ObjectId;
+    notificationHistoryClearedAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }

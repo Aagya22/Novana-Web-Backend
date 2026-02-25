@@ -1,5 +1,6 @@
 import { CreateReminderDTO, UpdateReminderDTO } from "../dtos/reminder.dto";
 import { HttpError } from "../errors/http-error";
+import { UserModel } from "../models/user.model";
 import { ReminderRepository } from "../repositories/reminder.repository";
 import { ReminderNotificationRepository } from "../repositories/reminder-notification.repository";
 
@@ -85,28 +86,43 @@ export class ReminderService {
         return updated;
     }
 
-    async deleteNotification(userId: string, id: string) {
-        const ok = await reminderNotificationRepository.deleteById(userId, id);
-        if (!ok) throw new HttpError(404, "Notification not found");
-        return true;
+    async markAllNotificationsRead(userId: string) {
+        return reminderNotificationRepository.markAllRead(userId);
     }
 
     async clearNotificationHistory(userId: string) {
+        await UserModel.updateOne(
+            { _id: userId },
+            { $set: { notificationHistoryClearedAt: new Date() } }
+        ).exec();
+
+       
         return reminderNotificationRepository.deleteAllByUser(userId);
     }
 
-    /**
-     * Backfills reminder notifications that would have been delivered while the app was closed.
-     * Creates at most one notification per (userId, reminderId, scheduledFor) because of the unique index.
-     */
+  
+     
     async backfillMissedNotifications(userId: string, lookbackHours = 24) {
         const now = new Date();
         const lookbackMs = Math.max(0, lookbackHours) * 60 * 60 * 1000;
         const from = new Date(now.getTime() - lookbackMs);
 
+        const user = await UserModel.findById(userId)
+            .select("notificationHistoryClearedAt")
+            .lean()
+            .exec();
+
+        const clearedAt = (user as any)?.notificationHistoryClearedAt
+            ? new Date((user as any).notificationHistoryClearedAt)
+            : null;
+
+        const effectiveFrom = clearedAt && clearedAt.getTime() > from.getTime()
+            ? clearedAt
+            : from;
+
         const reminders = await reminderRepository.getRemindersByUser(userId);
 
-        // Consider today and yesterday; this covers late-night reminders after midnight.
+        // Consider today and yesterday
         const dayStarts = [startOfDay(now), startOfDay(addDays(now, -1))];
 
         let createdCount = 0;
@@ -128,8 +144,16 @@ export class ReminderService {
                 const dow = scheduledFor.getDay();
                 if (days.length > 0 && !days.includes(dow)) continue;
 
-                // Only backfill items in the lookback window and not in the future.
-                if (!isBetweenInclusive(scheduledFor, from, now)) continue;
+                
+                if (!isBetweenInclusive(scheduledFor, effectiveFrom, now)) continue;
+
+                // If the reminder was created/edited after today's scheduled time, don't "catch up" today.
+                // Example: editing 12:14 -> 16:51 at 17:00 should trigger tomorrow, not today.
+                const scheduleUpdatedAtRaw = (reminder as any).scheduleUpdatedAt ?? (reminder as any).createdAt;
+                const scheduleUpdatedAt = scheduleUpdatedAtRaw ? new Date(scheduleUpdatedAtRaw) : null;
+                if (scheduleUpdatedAt && scheduleUpdatedAt.getTime() > scheduledFor.getTime()) {
+                    continue;
+                }
 
                 const delivered = await reminderNotificationRepository.createIfNotExists({
                     userId,
@@ -146,10 +170,7 @@ export class ReminderService {
         return createdCount;
     }
 
-    /**
-     * Returns newly delivered reminder notifications for the user.
-     * Client is expected to poll (e.g. every 60s).
-     */
+   
     async deliverDueReminders(userId: string, windowMinutes = 2) {
         const now = new Date();
         const dow = now.getDay();
@@ -170,10 +191,20 @@ export class ReminderService {
             const reminderMinutes = parseHHmmToMinutes(reminder.time);
             if (reminderMinutes === null) continue;
 
-            if (Math.abs(reminderMinutes - nowMinutes) > Math.max(0, windowMinutes)) continue;
+            // Only deliver at/after the scheduled time, within the allowed late window.
+            // (Avoid early delivery which can feel like a clash across clients.)
+            const lateBy = nowMinutes - reminderMinutes;
+            if (lateBy < 0) continue;
+            if (lateBy > Math.max(0, windowMinutes)) continue;
 
             const scheduledFor = new Date(startToday);
             scheduledFor.setHours(Math.floor(reminderMinutes / 60), reminderMinutes % 60, 0, 0);
+
+            const scheduleUpdatedAtRaw = (reminder as any).scheduleUpdatedAt ?? (reminder as any).createdAt;
+            const scheduleUpdatedAt = scheduleUpdatedAtRaw ? new Date(scheduleUpdatedAtRaw) : null;
+            if (scheduleUpdatedAt && scheduleUpdatedAt.getTime() > scheduledFor.getTime()) {
+                continue;
+            }
 
             const delivered = await reminderNotificationRepository.createIfNotExists({
                 userId,

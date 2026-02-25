@@ -111,4 +111,70 @@ describe("Reminder API (integration)", () => {
     expect(list.status).toBe(200);
     expect(list.body.data.length).toBe(0);
   });
+
+  it("6) does not backfill when reminder is created after scheduled time", async () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(2030, 0, 15, 17, 0, 0));
+
+      const token = await createUserAndToken();
+
+      await request(app)
+        .post("/api/reminders")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title: "Past", time: "16:51" });
+
+      const history = await request(app)
+        .get("/api/reminders/notifications")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(history.status).toBe(200);
+      expect(history.body.success).toBe(true);
+      expect(Array.isArray(history.body.data)).toBe(true);
+      expect(history.body.data.length).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("7) still backfills missed notifications after a title-only edit", async () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(2030, 0, 15, 9, 0, 0));
+
+      const token = await createUserAndToken();
+
+      const created = await request(app)
+        .post("/api/reminders")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title: "Initial", time: "10:00" });
+
+      expect(created.status).toBe(201);
+      const id = created.body.data._id;
+
+      // Later in the day, after the reminder time has passed, change only the title.
+      jest.setSystemTime(new Date(2030, 0, 15, 15, 0, 0));
+      const updated = await request(app)
+        .put(`/api/reminders/${id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title: "Renamed" });
+
+      expect(updated.status).toBe(200);
+
+      const history = await request(app)
+        .get("/api/reminders/notifications")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(history.status).toBe(200);
+      expect(history.body.success).toBe(true);
+      expect(Array.isArray(history.body.data)).toBe(true);
+      expect(history.body.data.length).toBe(1);
+
+      const scheduledFor = new Date(history.body.data[0].scheduledFor);
+      expect(scheduledFor.getHours()).toBe(10);
+      expect(scheduledFor.getMinutes()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

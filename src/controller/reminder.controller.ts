@@ -55,18 +55,18 @@ export class ReminderController {
         }
     }
 
-    async deleteNotification(req: Request, res: Response) {
+    async markAllNotificationsRead(req: Request, res: Response) {
         try {
             const userId = req.user?._id?.toString();
             if (!userId) {
                 return res.status(401).json({ success: false, message: "Unauthorized" });
             }
 
-            const { id } = req.params;
-            await reminderService.deleteNotification(userId, id);
+            const updatedCount = await reminderService.markAllNotificationsRead(userId);
             return res.status(200).json({
                 success: true,
-                message: "Notification deleted",
+                message: "All notifications marked as read",
+                data: { updatedCount },
             });
         } catch (error: any) {
             return res.status(error.statusCode ?? 500).json({
@@ -103,9 +103,6 @@ export class ReminderController {
             if (!userId) {
                 return res.status(401).json({ success: false, message: "Unauthorized" });
             }
-
-            // Backfill missed notifications as well.
-            await reminderService.backfillMissedNotifications(userId, 24);
 
             const wmRaw = req.query.windowMinutes;
             const windowMinutes = typeof wmRaw === "string" ? Math.min(10, Math.max(0, parseInt(wmRaw, 10) || 2)) : 2;

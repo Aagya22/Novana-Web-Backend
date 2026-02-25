@@ -35,8 +35,8 @@ export class ReminderRepository {
             type: data.type ?? "journal",
             daysOfWeek: data.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6],
             enabled: data.enabled ?? true,
+            scheduleUpdatedAt: new Date(),
 
-            // Legacy
             date: data.date ? new Date(data.date) : new Date(),
             recurring: data.recurring ?? true,
         });
@@ -59,7 +59,13 @@ export class ReminderRepository {
         if (updates.daysOfWeek !== undefined) updateData.daysOfWeek = updates.daysOfWeek;
         if (updates.enabled !== undefined) updateData.enabled = updates.enabled;
 
-        // Legacy
+        const scheduleChanged =
+            updates.time !== undefined ||
+            updates.daysOfWeek !== undefined ||
+            updates.enabled !== undefined;
+        if (scheduleChanged) updateData.scheduleUpdatedAt = new Date();
+
+    
         if (updates.date) updateData.date = new Date(updates.date);
         if (updates.recurring !== undefined) updateData.recurring = updates.recurring;
         return ReminderModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
