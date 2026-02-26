@@ -6,6 +6,27 @@ const exerciseService = new ExerciseService();
 
 export class ExerciseController {
 
+    async clearExerciseHistory(req: Request, res: Response) {
+        try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
+            const deletedCount = await exerciseService.clearExerciseHistory(userId);
+            return res.status(200).json({
+                success: true,
+                message: "Exercise history cleared",
+                data: { deletedCount },
+            });
+        } catch (error: any) {
+            return res.status(error.statusCode ?? 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
+        }
+    }
+
     async completeGuidedExercise(req: Request, res: Response) {
         try {
             const userId = req.user?._id?.toString();
