@@ -81,6 +81,13 @@ export class ExerciseRepository {
         return ExerciseModel.find({ userId }).sort({ date: -1 }).exec();
     }
 
+    async deleteAllExercisesByUser(userId: string): Promise<number> {
+        const res = await ExerciseModel.deleteMany({
+            userId: new mongoose.Types.ObjectId(userId),
+        }).exec();
+        return res.deletedCount ?? 0;
+    }
+
     async getExerciseById(id: string): Promise<IExercise | null> {
         return ExerciseModel.findById(id).exec();
     }

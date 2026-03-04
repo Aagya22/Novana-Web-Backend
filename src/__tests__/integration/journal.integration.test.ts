@@ -26,6 +26,20 @@ async function createUserAndToken() {
   return login.body.token as string;
 }
 
+async function setJournalPasscode(token: string, passcode: string, password: string) {
+  return request(app)
+    .put("/api/auth/journal-passcode")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ passcode, password });
+}
+
+async function clearJournalPasscode(token: string, password: string) {
+  return request(app)
+    .delete("/api/auth/journal-passcode")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ password });
+}
+
 describe("Journal API (integration)", () => {
   it("1) rejects creating a journal without auth", async () => {
     const res = await request(app)
@@ -181,5 +195,60 @@ describe("Journal API (integration)", () => {
 
     expect(list.status).toBe(200);
     expect(list.body.data.length).toBe(0);
+  });
+
+  it("6) requires passcode unlock when enabled", async () => {
+    const token = await createUserAndToken();
+
+    const set = await setJournalPasscode(token, "1234", "Password123");
+
+    expect(set.status).toBe(200);
+    expect(set.body.success).toBe(true);
+    expect(set.body.data.enabled).toBe(true);
+
+    const locked = await request(app)
+      .get("/api/journals")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(locked.status).toBe(403);
+    expect(locked.body.success).toBe(false);
+    expect(locked.body.code).toBe("JOURNAL_PASSCODE_REQUIRED");
+
+    const verify = await request(app)
+      .post("/api/auth/journal-passcode/verify")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ passcode: "1234" });
+
+    expect(verify.status).toBe(200);
+    expect(verify.body.success).toBe(true);
+    expect(typeof verify.body.data.token).toBe("string");
+
+    const unlocked = await request(app)
+      .get("/api/journals")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-journal-access-token", verify.body.data.token);
+
+    expect(unlocked.status).toBe(200);
+    expect(unlocked.body.success).toBe(true);
+  });
+
+  it("7) requires app password to enable/disable journal passcode", async () => {
+    const token = await createUserAndToken();
+
+    const badEnable = await setJournalPasscode(token, "1234", "WrongPassword");
+    expect(badEnable.status).toBe(401);
+    expect(badEnable.body.success).toBe(false);
+
+    const goodEnable = await setJournalPasscode(token, "1234", "Password123");
+    expect(goodEnable.status).toBe(200);
+    expect(goodEnable.body.success).toBe(true);
+
+    const badDisable = await clearJournalPasscode(token, "WrongPassword");
+    expect(badDisable.status).toBe(401);
+    expect(badDisable.body.success).toBe(false);
+
+    const goodDisable = await clearJournalPasscode(token, "Password123");
+    expect(goodDisable.status).toBe(200);
+    expect(goodDisable.body.success).toBe(true);
   });
 });

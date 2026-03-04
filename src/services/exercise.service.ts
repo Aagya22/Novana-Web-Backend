@@ -18,6 +18,10 @@ export class ExerciseService {
         return exerciseRepository.getGuidedHistoryByUser(userId, from, to);
     }
 
+    async clearExerciseHistory(userId: string) {
+        return exerciseRepository.deleteAllExercisesByUser(userId);
+    }
+
     async getExercisesByUser(userId: string) {
         return exerciseRepository.getExercisesByUser(userId);
     }

@@ -2,10 +2,26 @@ import { UserService } from "../services/user.service";
 import { CreateUserDTO, LoginUserDTO, UpdateUserDto } from "../dtos/user.dto";
 import { Request, Response } from "express";
 import z from "zod";
+import { IUser } from "../models/user.model";
 
 let userService = new UserService();
 
 export class AuthController {
+  private toPublicUser(user: IUser) {
+    return {
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+      username: user.username,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      imageUrl: user.imageUrl ?? null,
+      journalPasscodeEnabled: Boolean(user.journalPasscodeEnabled),
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
     async register(req: Request, res: Response) {
         try {
             const parsedData = CreateUserDTO.safeParse(req.body);
@@ -29,7 +45,8 @@ export class AuthController {
                     username: newUser.username,
                     phoneNumber: newUser.phoneNumber,
                     role: newUser.role,
-                    imageUrl: newUser.imageUrl ?? null
+                imageUrl: newUser.imageUrl ?? null,
+                journalPasscodeEnabled: Boolean((newUser as any).journalPasscodeEnabled),
                 }
             });
         } catch (error: any) {
@@ -66,6 +83,7 @@ async login(req: Request, res: Response) {
         phoneNumber: user.phoneNumber,
         role: user.role,
         imageUrl: user.imageUrl ?? null,
+        journalPasscodeEnabled: Boolean((user as any).journalPasscodeEnabled),
       },
       token,
     });
@@ -95,7 +113,7 @@ async login(req: Request, res: Response) {
     return res.status(200).json({
       success: true,
       message: "User profile fetched successfully",
-      data: user,
+      data: this.toPublicUser(user as any),
     });
   } catch (error: any) {
     return res.status(error.statusCode ?? 500).json({
@@ -138,7 +156,7 @@ async login(req: Request, res: Response) {
     return res.status(200).json({
       success: true,
       message: "User updated successfully",
-      data: updatedUser,
+      data: this.toPublicUser(updatedUser as any),
     });
   } catch (error: any) {
     return res.status(error.statusCode ?? 500).json({

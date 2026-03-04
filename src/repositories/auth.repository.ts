@@ -66,6 +66,25 @@ export class UserRepository {
     return UserModel.findById(id).exec();
   }
 
+  async updateJournalPasscode(
+    id: string,
+    updates: {
+      journalPasscodeHash: string | null;
+      journalPasscodeEnabled: boolean;
+      journalPasscodeUpdatedAt: Date;
+    }
+  ): Promise<IUser | null> {
+    return UserModel.findByIdAndUpdate(
+      id,
+      {
+        journalPasscodeHash: updates.journalPasscodeHash,
+        journalPasscodeEnabled: updates.journalPasscodeEnabled,
+        journalPasscodeUpdatedAt: updates.journalPasscodeUpdatedAt,
+      },
+      { new: true }
+    ).exec();
+  }
+
  
   async updateUser(
     id: string,

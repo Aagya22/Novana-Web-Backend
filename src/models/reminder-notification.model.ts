@@ -9,6 +9,7 @@ export interface IReminderNotification extends Document {
   scheduledFor: Date;
   deliveredAt: Date;
   readAt?: Date;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,7 @@ const ReminderNotificationSchema: Schema = new Schema(
     scheduledFor: { type: Date, required: true },
     deliveredAt: { type: Date, required: true, default: Date.now, index: true },
     readAt: { type: Date },
+    deletedAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
 );
