@@ -5,6 +5,7 @@ import path from "path";
 
 import authRoutes from "./routes/auth.route";
 import adminUserRoutes from "./routes/admin/user.route";
+import adminNotificationRoutes from "./routes/admin/notification.route";
 import journalRoutes from "./routes/journal.route";
 import exerciseRoutes from "./routes/exercise.route";
 import moodRoutes from "./routes/mood.route";
@@ -36,6 +37,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/users", adminUserRoutes);
+app.use("/api/admin/notifications", adminNotificationRoutes);
 
 app.use("/api/journals", journalRoutes);
 app.use("/api/exercises", exerciseRoutes);

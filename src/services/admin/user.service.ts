@@ -3,8 +3,10 @@ import { CreateUserDTO, LoginUserDto, UpdateUserDto } from "../../dtos/user.dto"
 import  bcryptjs from "bcryptjs"
 import { HttpError } from "../../errors/http-error";
 import { UserRepository } from "../../repositories/auth.repository";
+import { AdminNotificationRepository } from "../../repositories/admin-notification.repository";
 
 let userRepository = new UserRepository();
+const adminNotificationRepo = new AdminNotificationRepository();
 
 export class AdminUserService {
     async createUser(data: CreateUserDTO){
@@ -21,6 +23,18 @@ export class AdminUserService {
         data.password = hashedPassword;
 
         const newUser = await userRepository.createUser(data);
+
+        // Notify admins about new user created by admin
+        try {
+          await adminNotificationRepo.create({
+            userId: newUser._id as any,
+            userFullName: newUser.fullName,
+            userEmail: newUser.email,
+            message: `New user created by admin: ${newUser.fullName} (${newUser.email})`,
+          });
+        } catch (_err) {
+        }
+
         return newUser;
     }
 

@@ -5,10 +5,12 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 import { UserRepository } from "../repositories/auth.repository";
 import { sendEmail } from "../config/email";
+import { AdminNotificationRepository } from "../repositories/admin-notification.repository";
 
 const CLIENT_URL = process.env.CLIENT_URL as string;
 
 const userRepository = new UserRepository();
+const adminNotificationRepo = new AdminNotificationRepository();
 
 export class UserService {
 
@@ -25,7 +27,20 @@ export class UserService {
     }
 
     data.password = await bcryptjs.hash(data.password, 10);
-    return userRepository.createUser(data);
+    const newUser = await userRepository.createUser(data);
+
+    // Notify admins about new user registration
+    try {
+      await adminNotificationRepo.create({
+        userId: newUser._id as any,
+        userFullName: newUser.fullName,
+        userEmail: newUser.email,
+        message: `New user registered: ${newUser.fullName} (${newUser.email})`,
+      });
+    } catch (_err) {
+    }
+
+    return newUser;
   }
 
 async loginUser(data: LoginUserDto) {
