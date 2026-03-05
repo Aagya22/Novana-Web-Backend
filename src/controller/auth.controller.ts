@@ -1,5 +1,5 @@
 import { UserService } from "../services/user.service";
-import { CreateUserDTO, LoginUserDTO, UpdateUserDto } from "../dtos/user.dto";
+import { ChangePasswordDto, CreateUserDTO, LoginUserDTO, UpdateUserDto } from "../dtos/user.dto";
 import { Request, Response } from "express";
 import z from "zod";
 import { IUser } from "../models/user.model";
@@ -196,5 +196,39 @@ async sendResetPasswordEmail(req: Request, res: Response) {
             );
         }
     }
+
+  async changePassword(req: Request, res: Response) {
+    try {
+      const userId = req.user?._id?.toString();
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const parsedData = ChangePasswordDto.safeParse(req.body);
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          message: parsedData.error.issues.map((i) => i.message).join(", "),
+        });
+      }
+
+      const { currentPassword, newPassword } = parsedData.data;
+      await userService.changePassword(userId, currentPassword, newPassword);
+
+      return res.status(200).json({
+        success: true,
+        message: "Password changed successfully",
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
 
 }

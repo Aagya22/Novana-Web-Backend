@@ -111,6 +111,34 @@ async loginUser(data: LoginUserDto) {
 
     return userRepository.updateUserById(userId, data);
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    if (!userId) {
+      throw new HttpError(400, "User ID is required");
+    }
+
+    if (!currentPassword || !newPassword) {
+      throw new HttpError(400, "Current and new password are required");
+    }
+
+    const user = await userRepository.getUserById(userId);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+
+    const validPassword = await bcryptjs.compare(currentPassword, user.password);
+    if (!validPassword) {
+      throw new HttpError(401, "Current password is incorrect");
+    }
+
+    if (currentPassword === newPassword) {
+      throw new HttpError(400, "New password must be different from current password");
+    }
+
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await userRepository.updateUser(userId, { password: hashedPassword });
+    return true;
+  }
   async sendResetPasswordEmail(email?: string) {
         if (!email) {
             throw new HttpError(400, "Email is required");
