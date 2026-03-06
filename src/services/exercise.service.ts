@@ -26,24 +26,24 @@ export class ExerciseService {
         return exerciseRepository.getExercisesByUser(userId);
     }
 
-    async getExerciseById(id: string) {
-        const exercise = await exerciseRepository.getExerciseById(id);
+    async getExerciseById(userId: string, id: string) {
+        const exercise = await exerciseRepository.getExerciseByIdForUser(userId, id);
         if (!exercise) {
             throw new HttpError(404, "Exercise not found");
         }
         return exercise;
     }
 
-    async updateExercise(id: string, data: UpdateExerciseDTO) {
-        const exercise = await exerciseRepository.updateExercise(id, data);
+    async updateExercise(userId: string, id: string, data: UpdateExerciseDTO) {
+        const exercise = await exerciseRepository.updateExerciseForUser(userId, id, data);
         if (!exercise) {
             throw new HttpError(404, "Exercise not found");
         }
         return exercise;
     }
 
-    async deleteExercise(id: string) {
-        const exercise = await exerciseRepository.deleteExercise(id);
+    async deleteExercise(userId: string, id: string) {
+        const exercise = await exerciseRepository.deleteExerciseForUser(userId, id);
         if (!exercise) {
             throw new HttpError(404, "Exercise not found");
         }
