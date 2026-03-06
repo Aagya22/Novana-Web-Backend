@@ -27,6 +27,25 @@ async function createUserAndToken() {
 }
 
 describe("Reminder API (integration)", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  function useFakeDateOnly() {
+    jest.useFakeTimers({
+      doNotFake: [
+        "setTimeout",
+        "clearTimeout",
+        "setInterval",
+        "clearInterval",
+        "setImmediate",
+        "clearImmediate",
+        "nextTick",
+        "queueMicrotask",
+      ],
+    });
+  }
+
   it("1) rejects creating a reminder without auth", async () => {
     const res = await request(app)
       .post("/api/reminders")
@@ -113,7 +132,7 @@ describe("Reminder API (integration)", () => {
   });
 
   it("6) does not backfill when reminder is created after scheduled time", async () => {
-    jest.useFakeTimers();
+    useFakeDateOnly();
     try {
       jest.setSystemTime(new Date(2030, 0, 15, 17, 0, 0));
 
@@ -138,7 +157,7 @@ describe("Reminder API (integration)", () => {
   });
 
   it("7) still backfills missed notifications after a title-only edit", async () => {
-    jest.useFakeTimers();
+    useFakeDateOnly();
     try {
       jest.setSystemTime(new Date(2030, 0, 15, 9, 0, 0));
 

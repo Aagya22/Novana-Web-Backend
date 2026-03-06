@@ -88,20 +88,20 @@ export class ExerciseRepository {
         return res.deletedCount ?? 0;
     }
 
-    async getExerciseById(id: string): Promise<IExercise | null> {
-        return ExerciseModel.findById(id).exec();
+    async getExerciseByIdForUser(userId: string, id: string): Promise<IExercise | null> {
+        return ExerciseModel.findOne({ _id: id, userId }).exec();
     }
 
-    async updateExercise(id: string, updates: UpdateExerciseDTO): Promise<IExercise | null> {
+    async updateExerciseForUser(userId: string, id: string, updates: UpdateExerciseDTO): Promise<IExercise | null> {
         const updateData: any = {};
         if (updates.type) updateData.type = updates.type;
         if (updates.duration) updateData.duration = updates.duration;
         if (updates.date) updateData.date = new Date(updates.date);
         if (updates.notes !== undefined) updateData.notes = updates.notes;
-        return ExerciseModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+        return ExerciseModel.findOneAndUpdate({ _id: id, userId }, updateData, { new: true }).exec();
     }
 
-    async deleteExercise(id: string): Promise<IExercise | null> {
-        return ExerciseModel.findByIdAndDelete(id).exec();
+    async deleteExerciseForUser(userId: string, id: string): Promise<IExercise | null> {
+        return ExerciseModel.findOneAndDelete({ _id: id, userId }).exec();
     }
 }

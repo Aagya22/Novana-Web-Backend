@@ -128,8 +128,13 @@ export class ExerciseController {
 
     async getExercise(req: Request, res: Response) {
         try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
             const { id } = req.params;
-            const exercise = await exerciseService.getExerciseById(id);
+            const exercise = await exerciseService.getExerciseById(userId, id);
             return res.status(200).json({
                 success: true,
                 message: "Exercise fetched successfully",
@@ -145,6 +150,11 @@ export class ExerciseController {
 
     async updateExercise(req: Request, res: Response) {
         try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
             const { id } = req.params;
             const parsedData = UpdateExerciseDTO.safeParse(req.body);
             if (!parsedData.success) {
@@ -152,7 +162,7 @@ export class ExerciseController {
                 return res.status(400).json({ success: false, message: messages });
             }
 
-            const exercise = await exerciseService.updateExercise(id, parsedData.data);
+            const exercise = await exerciseService.updateExercise(userId, id, parsedData.data);
             return res.status(200).json({
                 success: true,
                 message: "Exercise updated successfully",
@@ -168,8 +178,13 @@ export class ExerciseController {
 
     async deleteExercise(req: Request, res: Response) {
         try {
+            const userId = req.user?._id?.toString();
+            if (!userId) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
+
             const { id } = req.params;
-            await exerciseService.deleteExercise(id);
+            await exerciseService.deleteExercise(userId, id);
             return res.status(200).json({
                 success: true,
                 message: "Exercise deleted successfully"
