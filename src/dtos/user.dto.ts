@@ -26,7 +26,6 @@ export type CreateUserDTO = z.infer<typeof CreateUserDTO>;
 export const LoginUserDTO = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  // loginAs: z.enum(["user", "admin"]),
 });
 
 export type LoginUserDto = z.infer<typeof LoginUserDTO>;

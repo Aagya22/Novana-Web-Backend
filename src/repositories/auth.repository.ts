@@ -14,10 +14,6 @@ export class UserRepository {
     });
   }
 
-  async getAllUsers(): Promise<IUser[]> {
-    return UserModel.find().exec();
-  }
-
   async getAllUsersWithPagination(
     page: number = 1,
     limit: number = 10,

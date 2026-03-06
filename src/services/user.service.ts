@@ -86,16 +86,6 @@ async loginUser(data: LoginUserDto) {
     return user;
   }
 
-
-  async makeAdmin(userId: string) {
-    const user = await userRepository.getUserById(userId);
-    if (!user) {
-      throw new HttpError(404, "User not found");
-    }
-
-    return userRepository.updateAdminRole(userId, "admin");
-  }
-
  
   async updateUser(userId: string, data: UpdateUserDto) {
     const user = await userRepository.getUserById(userId);

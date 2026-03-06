@@ -1,4 +1,4 @@
-import { CreateUserDTO, LoginUserDto, UpdateUserDto } from "../../dtos/user.dto";
+import { CreateUserDTO, UpdateUserDto } from "../../dtos/user.dto";
 
 import  bcryptjs from "bcryptjs"
 import { HttpError } from "../../errors/http-error";
@@ -36,11 +36,6 @@ export class AdminUserService {
         }
 
         return newUser;
-    }
-
-    async getAllUsers(){
-        const users = await userRepository.getAllUsers();
-        return users
     }
 
     async getAllUsersWithPagination(page: number = 1, limit: number = 10, search?: string){
