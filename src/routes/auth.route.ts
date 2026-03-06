@@ -22,6 +22,8 @@ router.put(
 router.post("/request-password-reset", authController.sendResetPasswordEmail);
 router.post("/reset-password/:token", authController.resetPassword);
 
+router.put("/change-password", authorizedMiddleware, (req, res) => authController.changePassword(req, res));
+
 router.get("/journal-passcode", authorizedMiddleware, (req, res) => journalPasscodeController.status(req, res));
 router.put("/journal-passcode", authorizedMiddleware, (req, res) => journalPasscodeController.set(req, res));
 router.delete("/journal-passcode", authorizedMiddleware, (req, res) => journalPasscodeController.clear(req, res));

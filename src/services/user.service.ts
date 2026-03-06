@@ -5,10 +5,12 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 import { UserRepository } from "../repositories/auth.repository";
 import { sendEmail } from "../config/email";
+import { AdminNotificationRepository } from "../repositories/admin-notification.repository";
 
 const CLIENT_URL = process.env.CLIENT_URL as string;
 
 const userRepository = new UserRepository();
+const adminNotificationRepo = new AdminNotificationRepository();
 
 export class UserService {
 
@@ -25,7 +27,20 @@ export class UserService {
     }
 
     data.password = await bcryptjs.hash(data.password, 10);
-    return userRepository.createUser(data);
+    const newUser = await userRepository.createUser(data);
+
+    // Notify admins about new user registration
+    try {
+      await adminNotificationRepo.create({
+        userId: newUser._id as any,
+        userFullName: newUser.fullName,
+        userEmail: newUser.email,
+        message: `New user registered: ${newUser.fullName} (${newUser.email})`,
+      });
+    } catch (_err) {
+    }
+
+    return newUser;
   }
 
 async loginUser(data: LoginUserDto) {
@@ -71,16 +86,6 @@ async loginUser(data: LoginUserDto) {
     return user;
   }
 
-
-  async makeAdmin(userId: string) {
-    const user = await userRepository.getUserById(userId);
-    if (!user) {
-      throw new HttpError(404, "User not found");
-    }
-
-    return userRepository.updateAdminRole(userId, "admin");
-  }
-
  
   async updateUser(userId: string, data: UpdateUserDto) {
     const user = await userRepository.getUserById(userId);
@@ -110,6 +115,34 @@ async loginUser(data: LoginUserDto) {
     }
 
     return userRepository.updateUserById(userId, data);
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    if (!userId) {
+      throw new HttpError(400, "User ID is required");
+    }
+
+    if (!currentPassword || !newPassword) {
+      throw new HttpError(400, "Current and new password are required");
+    }
+
+    const user = await userRepository.getUserById(userId);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+
+    const validPassword = await bcryptjs.compare(currentPassword, user.password);
+    if (!validPassword) {
+      throw new HttpError(401, "Current password is incorrect");
+    }
+
+    if (currentPassword === newPassword) {
+      throw new HttpError(400, "New password must be different from current password");
+    }
+
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await userRepository.updateUser(userId, { password: hashedPassword });
+    return true;
   }
   async sendResetPasswordEmail(email?: string) {
         if (!email) {

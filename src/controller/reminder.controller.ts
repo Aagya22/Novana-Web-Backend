@@ -13,7 +13,7 @@ export class ReminderController {
                 return res.status(401).json({ success: false, message: "Unauthorized" });
             }
 
-            // Backfill missed notifications (e.g., app was closed at scheduled time).
+          
             await reminderService.backfillMissedNotifications(userId, 24);
 
             const limitRaw = req.query.limit;

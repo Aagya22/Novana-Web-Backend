@@ -11,10 +11,6 @@ export class JournalService {
         return journalRepository.createJournal(userId, data);
     }
 
-    async getJournalsByUser(userId: string) {
-        return journalRepository.getJournalsByUser(userId);
-    }
-
     async getJournalsByUserWithFilters(userId: string, options: ListJournalsOptions) {
         return journalRepository.getJournalsByUserWithFilters(userId, options);
     }
